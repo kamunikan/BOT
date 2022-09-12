@@ -608,7 +608,7 @@ req_ovpn() {
     masaaktif=$(grep $coupon /root/multi/voucher | awk '{print $2}')
     req_voucher $file_user
     req_limit
-    domain=$(cat /root/domain)
+    domain=$(cat /etc/xray/domain)
     IP=$(wget -qO- ipinfo.io/ip)
     ssl="$(cat ~/log-install.txt | grep -w "Stunnel4" | cut -d: -f2 | sed 's/ //g')"
     useradd -e $(date -d "$masaaktif days" +"%Y-%m-%d") -s /bin/false -M $Login
@@ -717,13 +717,65 @@ grpc=`cat<<EOF
       "tls": "tls"
 }
 EOF`
+
+# DIGI
+DIGI80=`cat<<EOF
+      {
+      "v": "2",
+      "ps": "${user}",
+      "add": "162.159.134.61",
+      "port": "80",
+      "id": "${uuid}",
+      "aid": "0",
+      "net": "ws",
+      "path": "/vmess",
+      "type": "none",
+      "host": "${domain}",
+      "tls": "none"
+}
+EOF`
+# MAXIS
+MAXIS443=`cat<<EOF
+      {
+      "v": "2",
+      "ps": "${user}",
+      "add": "who.int",
+      "port": "443",
+      "id": "${uuid}",
+      "aid": "0",
+      "net": "ws",
+      "path": "wss://who.int/vmess",
+      "type": "none",
+      "host": "${domain}",
+      "tls": "tls",
+      "sni": "who.int"
+}
+EOF`
+# UMOBILE
+UMOBILE443=`cat<<EOF
+      {
+      "v": "2",
+      "ps": "${user}",
+      "add": "ulist.com.my.${domain}",
+      "port": "443",
+      "id": "${uuid}",
+      "aid": "0",
+      "net": "grpc",
+      "path": "vmess-grpc",
+      "type": "none",
+      "host": "ulist.com.my",
+      "tls": "tls",
+      "sni": "ulist.com.my"
+}
+EOF`
+
 echo -e "${Login}\t${uuid}\t${exp}" >>/etc/xray/user.txt
 vmess_base641=$( base64 -w 0 <<< $vmess_json1)
 vmess_base642=$( base64 -w 0 <<< $vmess_json2)
 vmess_base643=$( base64 -w 0 <<< $vmess_json3)
-vmesslink1="vmess://$(echo $asu | base64 -w 0)"
-vmesslink2="vmess://$(echo $ask | base64 -w 0)"
-vmesslink3="vmess://$(echo $grpc | base64 -w 0)"
+vmesslink1="vmess://$(echo $MAXIS443 | base64 -w 0)"
+vmesslink2="vmess://$(echo $DIGI80 | base64 -w 0)"
+vmesslink3="vmess://$(echo $UMOBILE443 | base64 -w 0)"
 systemctl restart xray.service
 service cron restart.service
 
@@ -732,13 +784,13 @@ service cron restart.service
     msg+="<b>User :</b> <code>$Login</code>\n"
     msg+="<b>Expired :</b> <code>$exp</code>\n"
     msg+="━━━━━━━━━━━━━━━━━━━━━\n"
-    msg+="<b>TLS</b>\n"
+    msg+="<b>MAXIS TLS</b>\n"
     msg+="<code>$vmesslink1</code>\n"
     msg+="\n"
-    msg+="<b>NON TLS</b>\n"
+    msg+="<b>DIGI NON TLS</b>\n"
     msg+="<code>$vmesslink2</code>\n"
     msg+="\n"
-    msg+="<b>GRPC</b>\n"
+    msg+="<b>UMOBILE GRPC</b>\n"
     msg+="<code>$vmesslink3</code>\n"
     msg+="━━━━━━━━━━━━━━━━━━━━━\n"
     msg+=" 👑 BOT BY www.dotycat.com \n"
